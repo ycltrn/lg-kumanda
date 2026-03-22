@@ -1035,7 +1035,7 @@ async function sendKey(keyName) {
     return;
   }
 
-  const xml = `<?xml version="1.0" encoding="utf-8"?><envelope><api type="command"><name>HandleKeyInput</name><value>${code}</value></command>`;
+  const xml = `<?xml version="1.0" encoding="utf-8"?><command><n>HandleKeyInput</n><value>${code}</value></command>`;
   const res = await udapRequest('/roap/api/command', 'POST', xml);
 
   if (!res) {
