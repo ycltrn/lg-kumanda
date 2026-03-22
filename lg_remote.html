@@ -380,7 +380,7 @@
     display: flex; gap: 8px; justify-content: center; margin-bottom: 18px;
   }
   .pin-input input {
-    width: 52px; height: 60px;
+    width: 42px; height: 56px;
     background: var(--bg);
     border: 2px solid var(--border);
     border-radius: 12px;
@@ -807,6 +807,8 @@
       <input type="tel" maxlength="1" id="p2" inputmode="numeric">
       <input type="tel" maxlength="1" id="p3" inputmode="numeric">
       <input type="tel" maxlength="1" id="p4" inputmode="numeric">
+      <input type="tel" maxlength="1" id="p5" inputmode="numeric">
+      <input type="tel" maxlength="1" id="p6" inputmode="numeric">
     </div>
     <button class="btn-pair" onclick="submitPin()">EŞLEŞ</button>
   </div>
@@ -997,8 +999,8 @@ async function startConnect() {
 }
 
 async function submitPin() {
-  const pin = ['p1','p2','p3','p4'].map(id => document.getElementById(id).value).join('');
-  if (pin.length < 4) { showToast('4 haneli PIN gir'); return; }
+  const pin = ['p1','p2','p3','p4','p5','p6'].map(id => document.getElementById(id).value).join('');
+  if (pin.length < 6) { showToast('6 haneli PIN gir'); return; }
 
   // ADIM 2: AuthReq + PIN → session key alır
   const xml = `<?xml version="1.0" encoding="utf-8"?><auth><type>AuthReq</type><value>${pin}</value></auth>`;
@@ -1019,7 +1021,7 @@ async function submitPin() {
   } else {
     updateStatus("PIN hatalı veya süre doldu. Tekrar dene.", 'err');
     showToast('❌ PIN hatalı');
-    ['p1','p2','p3','p4'].forEach(id => document.getElementById(id).value = '');
+    ['p1','p2','p3','p4','p5','p6'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('p1').focus();
   }
 }
@@ -1114,7 +1116,7 @@ function moveCursor(x, y) {
 // ============================================================
 // PIN MODAL AUTO-ADVANCE
 // ============================================================
-['p1','p2','p3','p4'].forEach((id, i, arr) => {
+['p1','p2','p3','p4','p5','p6'].forEach((id, i, arr) => {
   document.getElementById(id).addEventListener('input', function() {
     if (this.value && i < arr.length - 1) {
       document.getElementById(arr[i+1]).focus();
