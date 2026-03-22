@@ -908,8 +908,8 @@ async function sendTextToTV(text) {
   showToast('📤 Gönderiliyor...');
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
-    const xml = `<?xml version="1.0" encoding="utf-8"?><envelope><api type="command"><n>HandleKeyboardInput</n><value>${encodeURIComponent(char)}</value></api></envelope>`;
-    await udapRequest('/udap/api/command', 'POST', xml);
+    const xml = `<?xml version="1.0" encoding="utf-8"?><command><n>HandleKeyboardInput</n><value>${encodeURIComponent(char)}</value></command>`;
+    await udapRequest('/roap/api/command', 'POST', xml);
     await new Promise(r => setTimeout(r, 80));
   }
   showToast('✅ Metin gönderildi!');
@@ -958,7 +958,7 @@ async function udapRequest(path, method='GET', body=null) {
 
   const url = `http://${ip}:8080${path}`;
   const headers = { 'Content-Type': 'application/atom+xml' };
-  if (sessionKey) headers['Cookie'] = `session=${sessionKey}`;
+  if (sessionKey) headers['Cookie'] = `LGWebOSRemote=${sessionKey}`;
 
   try {
     const opts = { method, headers };
@@ -976,18 +976,18 @@ async function startConnect() {
 
   tvIP = ip;
   localStorage.setItem('tvIP', ip);
-  updateStatus('Bağlanıyor...', '');
+  updateStatus("TV'ye bağlanılıyor...", '');
   setConnDot('connecting');
 
-  // UDAP 2.0 pair request
-  const xml = `<?xml version="1.0" encoding="utf-8"?><envelope><api type="pairing"><name>hello</name><value>1</value><port>8080</port></api></envelope>`;
-  const res = await udapRequest('/udap/api/pairing', 'POST', xml);
+  // ADIM 1: AuthKeyReq → TV ekranda PIN gösterir
+  const xml = `<?xml version="1.0" encoding="utf-8"?><auth><type>AuthKeyReq</type></auth>`;
+  const res = await udapRequest('/roap/api/auth', 'POST', xml);
 
   if (res && res.ok) {
-    updateStatus('TV PIN bekliyor... TV ekranına bak!', '');
+    updateStatus("📺 TV ekranındaki PIN'i gir!", '');
     showPinModal();
   } else {
-    updateStatus('TV\'ye ulaşılamadı. IP adresini kontrol et.', 'err');
+    updateStatus("TV'ye ulaşılamadı. IP ve TV'nin açık olduğunu kontrol et.", 'err');
     setConnDot('');
     showToast('❌ Bağlantı başarısız');
   }
@@ -997,12 +997,13 @@ async function submitPin() {
   const pin = ['p1','p2','p3','p4'].map(id => document.getElementById(id).value).join('');
   if (pin.length < 4) { showToast('4 haneli PIN gir'); return; }
 
-  const xml = `<?xml version="1.0" encoding="utf-8"?><envelope><api type="pairing"><name>hello</name><value>${pin}</value><port>8080</port></api></envelope>`;
-  const res = await udapRequest('/udap/api/pairing', 'POST', xml);
+  // ADIM 2: AuthReq + PIN → session key alır
+  const xml = `<?xml version="1.0" encoding="utf-8"?><auth><type>AuthReq</type><value>${pin}</value></auth>`;
+  const res = await udapRequest('/roap/api/auth', 'POST', xml);
 
-  if (res) {
-    const cookie = res.headers.get('Set-Cookie') || '';
-    const match = cookie.match(/session=([^;]+)/);
+  if (res && res.ok) {
+    const text = await res.text();
+    const match = text.match(/<session>([^<]+)<\/session>/);
     if (match) {
       sessionKey = match[1];
       localStorage.setItem('sessionKey', sessionKey);
@@ -1013,8 +1014,10 @@ async function submitPin() {
     hidePinModal();
     showToast('✅ TV bağlandı!');
   } else {
-    updateStatus('PIN hatalı veya bağlantı kesildi.', 'err');
+    updateStatus("PIN hatalı veya süre doldu. Tekrar dene.", 'err');
     showToast('❌ PIN hatalı');
+    ['p1','p2','p3','p4'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('p1').focus();
   }
 }
 
@@ -1027,8 +1030,8 @@ async function sendKey(keyName) {
     return;
   }
 
-  const xml = `<?xml version="1.0" encoding="utf-8"?><envelope><api type="command"><name>HandleKeyInput</name><value>${code}</value></api></envelope>`;
-  const res = await udapRequest('/udap/api/command', 'POST', xml);
+  const xml = `<?xml version="1.0" encoding="utf-8"?><envelope><api type="command"><name>HandleKeyInput</name><value>${code}</value></command>`;
+  const res = await udapRequest('/roap/api/command', 'POST', xml);
 
   if (!res) {
     showToast('⚠️ Komut gönderilemedi');
