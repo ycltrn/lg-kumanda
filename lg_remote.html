@@ -954,21 +954,14 @@ const KEY_CODES = {
   INPUT: 11, DASH: 45
 };
 
-async function udapRequest(path, method='GET', body=null) {
+async function udapRequest(path, method='POST', body=null) {
   const ip = document.getElementById('ip-input').value.trim() || tvIP;
   if (!ip) { showToast('⚠️ IP adresi gir!'); return null; }
-
-  // IP'yi proxy'ye bildir
-  try { await fetch(`http://127.0.0.1:9090/set_ip?ip=${ip}`); } catch(e) {}
-
-  // Proxy üzerinden TV'ye gönder
-  const url = `http://127.0.0.1:9090/tv${path}`;
+  tvIP = ip;
+  const url = `http://${ip}:8080/udap/api/data`;
   const headers = { 'Content-Type': 'application/atom+xml' };
-
   try {
-    const opts = { method: method || 'POST', headers };
-    if (body) opts.body = body;
-    const res = await fetch(url, opts);
+    const res = await fetch(url, { method: 'POST', headers, body });
     return res;
   } catch(e) {
     return null;
