@@ -911,7 +911,7 @@ async function sendTextToTV(text) {
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
     const xml = `<?xml version="1.0" encoding="utf-8"?><command><n>HandleKeyboardInput</n><value>${encodeURIComponent(char)}</value></command>`;
-    await udapRequest('/roap/api/command', 'POST', xml);
+    await udapRequest('/udap/api/data', 'POST', xml);
     await new Promise(r => setTimeout(r, 80));
   }
   showToast('✅ Metin gönderildi!');
@@ -986,7 +986,7 @@ async function startConnect() {
 
   // ADIM 1: AuthKeyReq → TV ekranda PIN gösterir
   const xml = `<?xml version="1.0" encoding="utf-8"?><auth><type>AuthKeyReq</type></auth>`;
-  const res = await udapRequest('/roap/api/auth', 'POST', xml);
+  const res = await udapRequest('/udap/api/data', 'POST', xml);
 
   if (res && res.ok) {
     updateStatus("📺 TV ekranındaki PIN'i gir!", '');
@@ -1004,7 +1004,7 @@ async function submitPin() {
 
   // ADIM 2: AuthReq + PIN → session key alır
   const xml = `<?xml version="1.0" encoding="utf-8"?><auth><type>AuthReq</type><value>${pin}</value></auth>`;
-  const res = await udapRequest('/roap/api/auth', 'POST', xml);
+  const res = await udapRequest('/udap/api/data', 'POST', xml);
 
   if (res && res.ok) {
     const text = await res.text();
@@ -1036,7 +1036,7 @@ async function sendKey(keyName) {
   }
 
   const xml = `<?xml version="1.0" encoding="utf-8"?><command><n>HandleKeyInput</n><value>${code}</value></command>`;
-  const res = await udapRequest('/roap/api/command', 'POST', xml);
+  const res = await udapRequest('/udap/api/data', 'POST', xml);
 
   if (!res) {
     showToast('⚠️ Komut gönderilemedi');
