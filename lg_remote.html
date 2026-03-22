@@ -958,7 +958,10 @@ async function udapRequest(path, method='POST', body=null) {
   const ip = document.getElementById('ip-input').value.trim() || tvIP;
   if (!ip) { showToast('⚠️ IP adresi gir!'); return null; }
   tvIP = ip;
-  const url = `http://${ip}:8080/udap/api/data`;
+  // Set IP on proxy
+  try { await fetch('http://127.0.0.1:9090/setip/' + ip); } catch(e) {}
+  // Send via proxy
+  const url = 'http://127.0.0.1:9090/tv';
   const headers = { 'Content-Type': 'application/atom+xml' };
   try {
     const res = await fetch(url, { method: 'POST', headers, body });
